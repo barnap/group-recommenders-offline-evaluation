@@ -8,7 +8,9 @@ min_ratings_per_item = 10
 # Group generation settings
 group_sizes_to_test = [2,4,8] # [2, 3, 4, 5, 6, 7, 8]
 group_similarity_to_test = ["SIMILAR_ONE_DIVERGENT"] #["RANDOM", "SIMILAR", "DIVERGENT", "SIMILAR_ONE_DIVERGENT"]
-group_number = 20 # 1000
+group_number = 100 # 1000   
+similar_threshold = 0.5
+dissimilar_threshold = -0.1
 shared_ratings = 5
 
 # Evaluation settings
