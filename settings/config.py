@@ -6,14 +6,16 @@ min_ratings_per_user = 10
 min_ratings_per_item = 10
 
 # Group generation settings
-group_sizes_to_test = [2,4,8] # [2, 3, 4, 5, 6, 7, 8]
-group_similarity_to_test = ["SIMILAR_ONE_DIVERGENT"] #["RANDOM", "SIMILAR", "DIVERGENT", "SIMILAR_ONE_DIVERGENT"]
-group_number = 100 # 1000   
+group_sizes_to_create = [2,4,8] # [2, 3, 4, 5, 6, 7, 8]
+group_similarity_to_create = ["RANDOM", "SIMILAR", "DIVERGENT", "SIMILAR_ONE_DIVERGENT"]
+group_number = 20
 similar_threshold = 0.5
 dissimilar_threshold = -0.1
 shared_ratings = 5
 
 # Evaluation settings
+group_sizes_to_test = [2,4,8]
+group_similarity_to_test = ["SIMILAR_ONE_DIVERGENT"] #["RANDOM", "SIMILAR", "DIVERGENT", "SIMILAR_ONE_DIVERGENT"]
 individual_rs_strategy = "LENSKIT_CF_ITEM"  # the used strategy for individual RS, I am keeping it generic to allow comparing more Individual Rec Sys if implemented, in a single run)
 aggregation_strategies = ["BASE", "GFAR", "EPFuzzDA"]  # list of implemented aggregation strategies we want to test, these should also be implemented)
 recommendations_number = 20  # number of recommended items
