@@ -74,17 +74,20 @@ class NDCGEvaluator(MetricEvaluator):
             user_ground_truth.set_index("item", inplace=True)
 
             # feedback binarization
-            if cfg.binarize_feedback == True:
-                user_ground_truth["final_rating"] = 0
-                user_ground_truth.loc[
-                    user_ground_truth.rating >= cfg.binarize_feedback_positive_threshold, "final_rating"] = 1
-            # basic polarity debiasing (max(0, rating + c))
-            elif cfg.feedback_polarity_debiasing != 0.0:
-                user_ground_truth["final_rating"] = user_ground_truth.loc[:, "rating"] + cfg.feedback_polarity_debiasing
-                user_ground_truth.loc[user_ground_truth.final_rating < 0, "final_rating"] = 0
+            if cfg.group_types == "SYNTHETIC":
+                if cfg.binarize_feedback == True:
+                    user_ground_truth["final_rating"] = 0
+                    user_ground_truth.loc[user_ground_truth.rating >= cfg.binarize_feedback_positive_threshold,"final_rating"] = 1
+                # basic polarity debiasing (max(0, rating + c))
+                elif cfg.feedback_polarity_debiasing != 0.0:
+                    user_ground_truth["final_rating"] = user_ground_truth.loc[:,"rating"] + cfg.feedback_polarity_debiasing
+                    user_ground_truth.loc[user_ground_truth.final_rating < 0,"final_rating"] = 0              
                 # no modifications to feedback
-            else:
-                user_ground_truth["final_rating"] = user_ground_truth["rating"]
+                else:
+                    user_ground_truth["final_rating"] = user_ground_truth["rating"]
+            else: 
+                user_ground_truth["final_rating"] = 1
+            
 
                 # self-normalized inverse propensity debiasing
             user_ground_truth.loc[:, "final_rating"] = user_ground_truth.loc[:, "final_rating"] / propensity_per_item[
@@ -135,6 +138,17 @@ class NDCGEvaluator(MetricEvaluator):
                 "aggr_metric": "minmax",
                 "value": dcg_min_max
             }
+        ] if cfg.group_types == "SYNTHETIC" else [
+            {
+                "metric" : "NDCG",
+                "aggr_metric" : "mean",
+                "value" : np.mean(ndcg_list)
+            },
+            {
+                "metric" : "DCG",
+                "aggr_metric" : "mean",
+                "value" : np.mean(dcg_list)
+            }
         ]
 
 
@@ -163,7 +177,12 @@ class BinaryEvaluator(MetricEvaluator):
                     break
             dfh = user_norm * 1 / np.log2(first_hit_rank + 2)
 
-        return (recall, bounded_recall, dfh)
+        #mean reciprocal rank
+        rank_positions = np.where(np.isin(group_recommendation, correct_recs_list.index.tolist()))
+        reciprocal_ranks = [1/(x+1) for x in rank_positions]
+        mean_reciprocal_rank = np.mean(reciprocal_ranks)
+        
+        return (recall, bounded_recall, dfh, mean_reciprocal_rank)
 
     def evaluateGroupRecommendation(
             self,
@@ -178,15 +197,18 @@ class BinaryEvaluator(MetricEvaluator):
         recall_list = list()
         bounded_recall_list = list()
         dfh_list = list()
+        mrr_list = list()
         zero_recall = 0
         for user in group_members:
             user_ground_truth = group_ground_truth.loc[group_ground_truth['user'] == user]
             user_ground_truth.set_index("item", inplace=True)
 
-            # feedback binarization
-            user_ground_truth["final_rating"] = 0
-            user_ground_truth.loc[
-                user_ground_truth.rating >= cfg.binarize_feedback_positive_threshold, "final_rating"] = 1
+            #feedback binarization
+            if cfg.group_types == "SYNTHETIC":
+                user_ground_truth["final_rating"] = 0
+                user_ground_truth.loc[user_ground_truth.rating >= cfg.binarize_feedback_positive_threshold,"final_rating"] = 1
+            else:
+                user_ground_truth["final_rating"] = 1
 
             # self-normalized inverse propensity debiasing
             user_ground_truth.loc[:, "final_rating"] = user_ground_truth.loc[:, "final_rating"] / propensity_per_item[
@@ -195,7 +217,7 @@ class BinaryEvaluator(MetricEvaluator):
             if per_user_propensity_normalization_term is not None:
                 user_norm = per_user_propensity_normalization_term[user]
 
-            recall_user, bounded_recall_user, dfh_user = self.evaluateUserBinary(user_ground_truth,
+            recall_user, bounded_recall_user, dfh_user, mrr_user = self.evaluateUserBinary(user_ground_truth,
                                                                                  group_recommendation, user_norm)
             if recall_user == 0:
                 zero_recall += 1
@@ -203,16 +225,19 @@ class BinaryEvaluator(MetricEvaluator):
             recall_list.append(recall_user)
             bounded_recall_list.append(bounded_recall_user)
             dfh_list.append(dfh_user)
+            mrr_list.append(mrr_user)
 
         # failsafe for all negative results
         if np.amax(recall_list) > 0:
             rec_min_max = np.amin(recall_list) / np.amax(recall_list)
             bound_min_max = np.amin(bounded_recall_list) / np.amax(bounded_recall_list)
             dfh_min_max = np.amin(dfh_list) / np.amax(dfh_list)
+            mrr_min_max = np.amin(mrr_list)/np.amax(mrr_list)
         else:
             rec_min_max = 0.0
             bound_min_max = 0.0
             dfh_min_max = 0.0
+            mrr_min_max = 0.0
 
         return [
             {
@@ -265,7 +290,34 @@ class BinaryEvaluator(MetricEvaluator):
                 "aggr_metric": "mean",
                 "value": zero_recall / len(group_members)
             }
+        ] if cfg.group_types == "SYNTHETIC" else [
+            {
+                "metric" : "Recall",
+                "aggr_metric" : "mean",
+                "value" : np.mean(recall_list)
+            },
+            {
+                "metric" : "BoundedRecall",
+                "aggr_metric" : "mean",
+                "value" : np.mean(bounded_recall_list)
+            },
+            {
+                "metric" : "DFH",
+                "aggr_metric" : "mean",
+                "value" : np.mean(dfh_list)
+            },
+            {
+                "metric" : "zRecall",
+                "aggr_metric" : "mean",
+                "value" : zero_recall / len(group_members)
+            },
+            {
+                "metric" : "MRR",
+                "aggr_metric" : "mean",
+                "value" : np.mean(mrr_list)
+            }
         ]
+
 
 
 class BaselinesEvaluators(MetricEvaluator):

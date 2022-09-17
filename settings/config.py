@@ -1,5 +1,5 @@
-dataset_folder = "ml-1m"
-preprocessed_dataset_folder = "preprocessed_dataset"
+dataset_folder = "tourism_dataset" #"ml-1m"   "tourism_dataset"
+preprocessed_dataset_folder = "preprocessed_tourism_dataset" #"preprocessed_dataset" "preprocessed_tourism_dataset"
 
 # Preprocessing
 min_ratings_per_user = 10
@@ -14,14 +14,15 @@ dissimilar_threshold = -0.1
 shared_ratings = 5
 
 # Evaluation settings
+group_types = "REAL" # "SYNTHETIC"  # synthetic groups in ml-1m dataset vs. real groups in tourism dataset
 group_sizes_to_test = [2,4,8]
 group_similarity_to_test = ["SIMILAR_ONE_DIVERGENT"] #["RANDOM", "SIMILAR", "DIVERGENT", "SIMILAR_ONE_DIVERGENT"]
 individual_rs_strategy = "LENSKIT_CF_ITEM"  # the used strategy for individual RS, I am keeping it generic to allow comparing more Individual Rec Sys if implemented, in a single run)
-aggregation_strategies = ["BASE", "GFAR", "EPFuzzDA"]  # list of implemented aggregation strategies we want to test, these should also be implemented)
-recommendations_number = 20  # number of recommended items
+aggregation_strategies = ["BASE"]  # ["BASE", "GFAR", "EPFuzzDA"] list of implemented aggregation strategies we want to test
+recommendations_number = 5  # number of recommended items
 # recommendations_ordered = "ranking"  # sequence or ranking
 individual_rs_validation_folds_k = 0  # used for the k-fold validation)
-group_rs_evaluation_folds_k = 5 # 10
+group_rs_evaluation_folds_k = 0 # 10
 
 evaluation_strategy = "COUPLED"  # COUPLED / DECOUPLED evaluation type (see https://dl.acm.org/doi/10.1145/3511047.3537650)
 
