@@ -79,7 +79,7 @@ class GFARAggregator(AggregationStrategy):
         if top == 'max':
             score_df.loc[score_df.index, "predicted_rating_rev"] = -score_df["predicted_rating"]
 
-        select_top_n = top_n
+        select_top_n = min(top_n, len(score_df)-1)
         top_n_ind = np.argpartition(score_df.predicted_rating_rev, select_top_n)[:select_top_n]
         top_n_df = score_df.iloc[top_n_ind]
 
