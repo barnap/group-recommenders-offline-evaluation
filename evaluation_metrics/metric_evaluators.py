@@ -74,7 +74,7 @@ class NDCGEvaluator(MetricEvaluator):
             user_ground_truth.set_index("item", inplace=True)
 
             # feedback binarization
-            if cfg.group_types == "SYNTHETIC":
+            if cfg.evaluation_ground_truth != "GROUP_CHOICES":
                 if cfg.binarize_feedback == True:
                     user_ground_truth["final_rating"] = 0
                     user_ground_truth.loc[user_ground_truth.rating >= cfg.binarize_feedback_positive_threshold,"final_rating"] = 1
@@ -138,7 +138,7 @@ class NDCGEvaluator(MetricEvaluator):
                 "aggr_metric": "minmax",
                 "value": dcg_min_max
             }
-        ] if cfg.group_types == "SYNTHETIC" else [
+        ] if cfg.evaluation_ground_truth != "GROUP_CHOICES" else [
             {
                 "metric" : "NDCG",
                 "aggr_metric" : "mean",
@@ -160,7 +160,7 @@ class BinaryEvaluator(MetricEvaluator):
         correct_recs = correct_recs_list.shape[0]
         all_correct_per_user = user_ground_truth.loc[user_ground_truth.final_rating > 0].shape[0]
         if all_correct_per_user == 0:
-            return (0.0, 0.0, 0.0)
+            return (0.0, 0.0, 0.0, 0.0)
         recall = user_norm * correct_recs / all_correct_per_user
 
         # bounded recall, denominator is min(# of relevant items, length of the list)
@@ -204,7 +204,7 @@ class BinaryEvaluator(MetricEvaluator):
             user_ground_truth.set_index("item", inplace=True)
 
             #feedback binarization
-            if cfg.group_types == "SYNTHETIC":
+            if cfg.evaluation_ground_truth != "GROUP_CHOICES":
                 user_ground_truth["final_rating"] = 0
                 user_ground_truth.loc[user_ground_truth.rating >= cfg.binarize_feedback_positive_threshold,"final_rating"] = 1
             else:
@@ -290,7 +290,7 @@ class BinaryEvaluator(MetricEvaluator):
                 "aggr_metric": "mean",
                 "value": zero_recall / len(group_members)
             }
-        ] if cfg.group_types == "SYNTHETIC" else [
+        ] if cfg.evaluation_ground_truth != "GROUP_CHOICES" else [
             {
                 "metric" : "Recall",
                 "aggr_metric" : "mean",

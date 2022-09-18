@@ -14,7 +14,8 @@ dissimilar_threshold = -0.1
 shared_ratings = 5
 
 # Evaluation settings
-group_types = "REAL" # "SYNTHETIC"  # synthetic groups in ml-1m dataset vs. real groups in tourism dataset
+group_types = "REAL" # "REAL" or "SYNTHETIC"
+evaluation_ground_truth = "GROUP_CHOICES" # "GROUP_CHOICES" # "USER_RATINGS"  # "USER_SATISFACTION" # "GROUP_CHOICE" (for ml-1m only possible USER_RATINGS)
 group_sizes_to_test = [2,4,8]
 group_similarity_to_test = ["SIMILAR_ONE_DIVERGENT"] #["RANDOM", "SIMILAR", "DIVERGENT", "SIMILAR_ONE_DIVERGENT"]
 individual_rs_strategy = "LENSKIT_CF_ITEM"  # the used strategy for individual RS, I am keeping it generic to allow comparing more Individual Rec Sys if implemented, in a single run)

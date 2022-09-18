@@ -77,7 +77,27 @@ def create_per_user_group_choices(gr_composition, gr_choices):
             per_user_group_choices = pd.concat([per_user_group_choices, new_row1, new_row2], 
                                                axis=0, ignore_index=True)
     
-    return per_user_group_choices       
+    return per_user_group_choices
+
+# Creating user_satisfaction for evaluation (baseline) for tourism dataset
+def create_per_user_satisfaction(gr_composition, gr_choices, user_feedback):
+    user_satisfaction = pd.DataFrame(columns = ["user", "item", "rating"])
+    for group_id in gr_composition:
+        group = gr_composition[group_id]
+        for member_id in group['group_members']:
+            first_choice = gr_choices.loc[(gr_choices['group_id'] == group_id) & 
+                                          (gr_choices['rank'] == 1)]['item'].values[0]
+            second_choice = gr_choices.loc[(gr_choices['group_id'] == group_id) & 
+                                          (gr_choices['rank'] == 2)]['item'].values[0]
+            satisfaction = user_feedback.loc[user_feedback['user_id'] == member_id]['choice_sat'].values[0]
+            new_row1 = pd.DataFrame([[member_id, first_choice, satisfaction]], 
+                                       columns = ["user", "item", "rating"])
+            new_row2 = pd.DataFrame([[member_id, second_choice, satisfaction]], 
+                                       columns = ["user", "item", "rating"])
+            user_satisfaction = pd.concat([user_satisfaction, new_row1, new_row2], 
+                                               axis=0, ignore_index=True)
+    
+    return user_satisfaction
     
 #For all lists of group recommendations, evaluate their quality w.r.t. all required metrics    
 def evaluate_group_recommendations_forall_groups(
