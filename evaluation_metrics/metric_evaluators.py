@@ -27,7 +27,11 @@ class MetricEvaluator(ABC):
             group_recommendation,
             group_members,
             propensity_per_item,
-            per_user_propensity_normalization_term
+            per_user_propensity_normalization_term,
+            evaluation_ground_truth,            
+            binarize_feedback_positive_threshold,
+            binarize_feedback,
+            feedback_polarity_debiasing
     ):
         pass
 
@@ -64,7 +68,11 @@ class NDCGEvaluator(MetricEvaluator):
             group_recommendation,
             group_members,
             propensity_per_item,
-            per_user_propensity_normalization_term
+            per_user_propensity_normalization_term,
+            evaluation_ground_truth,            
+            binarize_feedback_positive_threshold,
+            binarize_feedback,
+            feedback_polarity_debiasing
     ):
         ndcg_list = list()
         dcg_list = list()
@@ -74,13 +82,13 @@ class NDCGEvaluator(MetricEvaluator):
             user_ground_truth.set_index("item", inplace=True)
 
             # feedback binarization
-            if cfg.evaluation_ground_truth != "GROUP_CHOICES":
-                if cfg.binarize_feedback == True:
+            if evaluation_ground_truth != "GROUP_CHOICES":
+                if binarize_feedback == True:
                     user_ground_truth["final_rating"] = 0
-                    user_ground_truth.loc[user_ground_truth.rating >= cfg.binarize_feedback_positive_threshold,"final_rating"] = 1
+                    user_ground_truth.loc[user_ground_truth.rating >= binarize_feedback_positive_threshold,"final_rating"] = 1
                 # basic polarity debiasing (max(0, rating + c))
-                elif cfg.feedback_polarity_debiasing != 0.0:
-                    user_ground_truth["final_rating"] = user_ground_truth.loc[:,"rating"] + cfg.feedback_polarity_debiasing
+                elif feedback_polarity_debiasing != 0.0:
+                    user_ground_truth["final_rating"] = user_ground_truth.loc[:,"rating"] + feedback_polarity_debiasing
                     user_ground_truth.loc[user_ground_truth.final_rating < 0,"final_rating"] = 0              
                 # no modifications to feedback
                 else:
@@ -88,6 +96,7 @@ class NDCGEvaluator(MetricEvaluator):
             else: 
                 user_ground_truth["final_rating"] = 1
             
+            #print(user_ground_truth.head(3))
 
                 # self-normalized inverse propensity debiasing
             user_ground_truth.loc[:, "final_rating"] = user_ground_truth.loc[:, "final_rating"] / propensity_per_item[
@@ -138,7 +147,7 @@ class NDCGEvaluator(MetricEvaluator):
                 "aggr_metric": "minmax",
                 "value": dcg_min_max
             }
-        ] if cfg.evaluation_ground_truth != "GROUP_CHOICES" else [
+        ] if evaluation_ground_truth != "GROUP_CHOICES" else [
             {
                 "metric" : "NDCG",
                 "aggr_metric" : "mean",
@@ -190,9 +199,13 @@ class BinaryEvaluator(MetricEvaluator):
             group_recommendation,
             group_members,
             propensity_per_item,
-            per_user_propensity_normalization_term
+            per_user_propensity_normalization_term,
+            evaluation_ground_truth,            
+            binarize_feedback_positive_threshold,
+            binarize_feedback,
+            feedback_polarity_debiasing
     ):
-        # Irrespective of the cfg.binarize_feedback setting, we need binary feedback for this set of metrics
+        # Irrespective of the binarize_feedback setting, we need binary feedback for this set of metrics
         # Use binary_positive_threshold, but do not use polarity_debiasing (kind of does the same thing)
         recall_list = list()
         bounded_recall_list = list()
@@ -204,11 +217,11 @@ class BinaryEvaluator(MetricEvaluator):
             user_ground_truth.set_index("item", inplace=True)
 
             #feedback binarization
-            if cfg.evaluation_ground_truth != "GROUP_CHOICES":
-                user_ground_truth["final_rating"] = 0
-                user_ground_truth.loc[user_ground_truth.rating >= cfg.binarize_feedback_positive_threshold,"final_rating"] = 1
-            else:
+            if evaluation_ground_truth == "GROUP_CHOICES":
                 user_ground_truth["final_rating"] = 1
+            else:
+                user_ground_truth["final_rating"] = 0
+                user_ground_truth.loc[user_ground_truth.rating >= binarize_feedback_positive_threshold,"final_rating"] = 1
 
             # self-normalized inverse propensity debiasing
             user_ground_truth.loc[:, "final_rating"] = user_ground_truth.loc[:, "final_rating"] / propensity_per_item[
@@ -216,7 +229,7 @@ class BinaryEvaluator(MetricEvaluator):
             user_norm = 1.0
             if per_user_propensity_normalization_term is not None:
                 user_norm = per_user_propensity_normalization_term[user]
-
+            #print(user_ground_truth.head(3))
             recall_user, bounded_recall_user, dfh_user, mrr_user = self.evaluateUserBinary(user_ground_truth,
                                                                                  group_recommendation, user_norm)
             if recall_user == 0:
@@ -286,11 +299,26 @@ class BinaryEvaluator(MetricEvaluator):
                 "value": dfh_min_max
             },
             {
+                "metric": "MRR",
+                "aggr_metric": "mean",
+                "value": np.mean(mrr_list)
+            },
+            {
+                "metric": "MRR",
+                "aggr_metric": "min",
+                "value": np.amin(mrr_list)
+            },
+            {
+                "metric": "MRR",
+                "aggr_metric": "minmax",
+                "value": mrr_min_max
+            },            
+            {
                 "metric": "zRecall",
                 "aggr_metric": "mean",
                 "value": zero_recall / len(group_members)
             }
-        ] if cfg.evaluation_ground_truth != "GROUP_CHOICES" else [
+        ] if evaluation_ground_truth != "GROUP_CHOICES" else [
             {
                 "metric" : "Recall",
                 "aggr_metric" : "mean",
@@ -327,6 +355,10 @@ class BaselinesEvaluators(MetricEvaluator):
             group_recommendation,
             group_members,
             propensity_per_item,
-            per_user_propensity_normalization_term
+            per_user_propensity_normalization_term,
+            evaluation_ground_truth,            
+            binarize_feedback_positive_threshold,
+            binarize_feedback,
+            feedback_polarity_debiasing
     ):
         return None
