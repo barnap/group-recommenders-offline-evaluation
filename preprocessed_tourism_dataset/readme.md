@@ -30,3 +30,10 @@ The datset contains the following files:
   - diff is members' perceived difficulty of the decision-making proces, range: 1-5
   - ident is members' level of identification with the resto of the group, range: 1-5
   - sim is members' perceived similarity of preferences within the group, range: 1-5
+
+## Using the dataset
+In order to use this dataset please make sure to cite the following publications:
+
+[1] Delic, A., Neidhardt, J., Nguyen, T.N. and Ricci, F., 2018. An observational user study for group recommender systems in the tourism domain. Information Technology & Tourism, 19(1), pp.87-116.
+
+[2] Delic, A., Neidhardt, J., Nguyen, T.N., Ricci, F., Rook, L., Werthner, H. and Zanker, M., 2016, September. Observing group decision making processes. In Proceedings of the 10th ACM conference on recommender systems (pp. 147-150).
