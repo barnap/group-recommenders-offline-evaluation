@@ -27,3 +27,4 @@ The main evaluation pipeline is divided into several Python notebooks, specific 
 
 Note that results of each individual step of the evaluation pipeline are stored in the Pickles file, so they can be executed just once unless different parameters are selected.
 
+- for ML1M dataset, several pre-computed evaluation runs are stored in preprocessed_dataset/evaluation_runs.zip If unziped in the same folder, one can continue directly to the results visualization cells in grs_evaluation_final_ml1m.ipynb and explore these pre-computed results.
