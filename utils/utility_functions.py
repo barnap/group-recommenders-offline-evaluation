@@ -106,7 +106,11 @@ def evaluate_group_recommendations_forall_groups(
     group_composition, 
     propensity_per_item,
     per_user_propensity_normalization_term, 
-    current_fold):
+    current_fold,
+    evaluation_ground_truth,            
+    binarize_feedback_positive_threshold,
+    binarize_feedback,
+    feedback_polarity_debiasing):
 #     group_evaluations = dict()
     evaluation_strategy = cfg.evaluation_strategy
     metrics = cfg.metrics
@@ -133,8 +137,17 @@ def evaluate_group_recommendations_forall_groups(
     #             print(datetime.now(), aggregation_strategy)
                 metric_evaluator = MetricEvaluator.getMetricEvaluator(metric)
 #                 agg_group_rec_eval = {**agg_group_rec_eval, **metric_evaluator.evaluateGroupRecommendation(group_ground_truth, agg_group_rec, group_members)}
-                agg_group_rec_eval = agg_group_rec_eval + metric_evaluator.evaluateGroupRecommendation(
-                    group_ground_truth, agg_group_rec, group_members, propensity_per_item, per_user_propensity_normalization_term)
+                agg_group_rec_eval = agg_group_rec_eval + metric_evaluator.evaluateGroupRecommendation(                                  
+                                  group_ground_truth,
+                                  agg_group_rec,
+                                  group_members,
+                                  propensity_per_item,
+                                  per_user_propensity_normalization_term,
+                                  evaluation_ground_truth,            
+                                  binarize_feedback_positive_threshold,
+                                  binarize_feedback,
+                                  feedback_polarity_debiasing
+                    )
     
             # Adding aggregation strategy info
             for row in agg_group_rec_eval:
