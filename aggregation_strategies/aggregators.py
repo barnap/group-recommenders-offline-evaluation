@@ -17,6 +17,8 @@ class AggregationStrategy(ABC):
             return GFARAggregator()
         elif strategy == "EPFuzzDA":
             return EPFuzzDAAggregator()
+        elif strategy == "FAI":
+            return FAIAggregator()
         return None
 
     @abstractmethod
@@ -61,11 +63,15 @@ class BaselinesAggregator(AggregationStrategy):
         # most pleasure
         mpl_df = aggregated_df.sort_values(by="amax", ascending=False).reset_index()[['item', 'amax']]
         mpl_recommendation_list = list(mpl_df.head(recommendations_number)['item'])
+        # FAI
+        fai_df = aggregated_df.sort_values(by="amax", ascending=False).reset_index()[['item', 'amax']]
+        fai_recommendation_list = list(fai_df.head(recommendations_number)['item'])
         return {
             "ADD": add_recommendation_list,
             "MUL": mul_recommendation_list,
             "LMS": lms_recommendation_list,
-            "MPL": mpl_recommendation_list
+            "MPL": mpl_recommendation_list,
+            "FAI": fai_recommendation_list
         }
 
 
@@ -237,3 +243,21 @@ class EPFuzzDAAggregator(AggregationStrategy):
     def generate_group_recommendations_for_group(self, group_ratings, recommendations_number):
         selected_items = self.ep_fuzzdhondt_algorithm(group_ratings, recommendations_number)
         return {"EPFuzzDA": selected_items}
+    
+class FAIAggregator(AggregationStrategy):
+    # implements FAI aggregation algorithm
+    def fai_algorithm(self, group_ratings):
+        print("It entered the FAI aggregation")
+        selected_items = []
+        
+        ## Finish FAI algorithm here later
+        aggregated_df = group_ratings.groupby('item').sum()
+        aggregated_df = aggregated_df.sort_values(by="predicted_rating", ascending=False).reset_index()[
+            ['item', 'predicted_rating']]
+        selected_items = list(aggregated_df.head(recommendations_number)['item'])
+        
+        return selected_items
+    
+    def generate_group_recommendations_for_group(self, group_ratings, recommendations_number):
+        selected_items = self.fai_algorithm(group_ratings, recommendations_number)
+        return {"FAI": selected_items}
