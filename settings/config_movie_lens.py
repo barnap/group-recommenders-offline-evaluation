@@ -23,7 +23,7 @@ aggregation_strategies = ["BASE", "GFAR", "EPFuzzDA", "FAI"]  # ["BASE", "GFAR",
 recommendations_number = 20  # number of recommended items
 # recommendations_ordered = "ranking"  # sequence or ranking
 individual_rs_validation_folds_k = 0  # used for the k-fold validation)
-group_rs_evaluation_folds_k = 5 # 5
+group_rs_evaluation_folds_k = 3 # 5
 
 evaluation_strategy = "COUPLED"  # COUPLED / DECOUPLED evaluation type (see https://dl.acm.org/doi/10.1145/3511047.3537650)
 
@@ -36,3 +36,5 @@ binarize_feedback_positive_threshold = 4.0 # if the feedback should be binarize,
 feedback_polarity_debiasing = -3.0 #polarity debiasing parameter c from https://dl.acm.org/doi/10.1145/3511047.3537650 usage: rating = max(0, rating+c)
 
 metrics = ["NDCG","BINARY"]  # list of implemented metrics to evaluate)
+
+borda_threshold = []
