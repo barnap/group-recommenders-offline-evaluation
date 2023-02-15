@@ -20,10 +20,10 @@ group_sizes_to_test = [2,4,8]
 group_similarity_to_test = ["RANDOM", "SIMILAR", "DIVERGENT", "SIMILAR_ONE_DIVERGENT"] #["RANDOM", "SIMILAR", "DIVERGENT", "SIMILAR_ONE_DIVERGENT"]
 individual_rs_strategy = "LENSKIT_CF_ITEM"  # the used strategy for individual RS, I am keeping it generic to allow comparing more Individual Rec Sys if implemented, in a single run)
 aggregation_strategies = ["BASE", "GFAR", "EPFuzzDA", "FAI"]  # ["BASE", "GFAR", "EPFuzzDA"] list of implemented aggregation strategies we want to test
-recommendations_number = 20  # number of recommended items
+recommendations_number = 10  # number of recommended items
 # recommendations_ordered = "ranking"  # sequence or ranking
 individual_rs_validation_folds_k = 0  # used for the k-fold validation)
-group_rs_evaluation_folds_k = 3 # 5
+group_rs_evaluation_folds_k = 5 # 5
 
 evaluation_strategy = "COUPLED"  # COUPLED / DECOUPLED evaluation type (see https://dl.acm.org/doi/10.1145/3511047.3537650)
 

@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import settings.config as cfg
+import settings.config_movie_lens as cfg
 from aggregation_strategies.aggregators import AggregationStrategy
 from evaluation_metrics.metric_evaluators import MetricEvaluator
 
@@ -40,6 +40,7 @@ def generate_group_recommendations_forall_groups(test_df, group_composition, rec
     for group_id in group_composition:
         
 #         print(datetime.now(), group_id)
+        print("It reached generate_group_recommendations_forall_groups")
         
         # extract group info
         group = group_composition[group_id]

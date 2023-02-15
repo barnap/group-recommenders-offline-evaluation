@@ -3,7 +3,7 @@ import pandas as pd
 
 from abc import ABC, abstractmethod
 
-import settings.config as cfg
+import settings.config_movie_lens as cfg
 
 class AggregationStrategy(ABC):
 
@@ -67,14 +67,14 @@ class BaselinesAggregator(AggregationStrategy):
         mpl_df = aggregated_df.sort_values(by="amax", ascending=False).reset_index()[['item', 'amax']]
         mpl_recommendation_list = list(mpl_df.head(recommendations_number)['item'])
         # BordaCount
-        fai_df = aggregated_df.sort_values(by="amax", ascending=False).reset_index()[['item', 'amax']]
-        fai_recommendation_list = list(fai_df.head(recommendations_number)['item'])
+        bdc_df = aggregated_df.sort_values(by="amax", ascending=False).reset_index()[['item', 'amax']]
+        bdc_recommendation_list = list(bdc_df.head(recommendations_number)['item'])
         return {
             "ADD": add_recommendation_list,
             "MUL": mul_recommendation_list,
             "LMS": lms_recommendation_list,
             "MPL": mpl_recommendation_list,
-            "FAI": fai_recommendation_list
+            "BDC": bdc_recommendation_list
         }
 
 
