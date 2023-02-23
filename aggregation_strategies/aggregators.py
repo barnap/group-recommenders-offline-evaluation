@@ -23,6 +23,8 @@ class AggregationStrategy(ABC):
             return FAIAggregator()
         elif strategy == "BDC":
             return BordaCountAggregator()
+        elif strategy == "AVGNM":
+            return AVGNoMiseryAggregator()
         return None
 
     @abstractmethod
@@ -256,13 +258,13 @@ class FAIAggregator(AggregationStrategy):
             # print("user "+str(unique_users[user_index])+", looping index "+str(user_index)+" | linear index "+str(i))
             
             curr_user_ratings = group_ratings.loc[group_ratings['user'] == unique_users[user_index]] # only the ratings of current selected user index
-            curr_user_ratings = curr_user_ratings.sort_values(by="predicted_rating", ascending=False) # order the ratings so higher are on top
+            curr_user_ratings = curr_user_ratings.sort_values(by="predicted_rating", ascending=False).reset_index() # order the ratings so higher are on top
             curr_user_ratings = curr_user_ratings.loc[~curr_user_ratings['item'].isin(selected_items)] # remove all rows with item already on selected_items
+            
             selected_item = curr_user_ratings['item'].iloc[0] # pick top row, with highest rating for current selected user index
             
             selected_items.append(selected_item) # append to final list
         
-        print(selected_items)
         return selected_items
     
     def generate_group_recommendations_for_group(self, group_ratings, recommendations_number):
@@ -279,3 +281,20 @@ class BordaCountAggregator(AggregationStrategy):
     def generate_group_recommendations_for_group(self, group_ratings, recommendations_number):
         selected_items = self.bdc_algorithm(group_ratings, recommendations_number)
         return {"BDC": selected_items}
+    
+class AVGNoMiseryAggregator(AggregationStrategy):
+    # implements AVGNoMisery aggregation algorithm
+    def avgnm_algorithm(self, group_ratings, recommendations_number, threshold=0):
+        threshold_ratings = group_ratings.loc[group_ratings['predicted_rating'] > threshold] # only the ratings above threshold
+        
+        aggregated_ratings = threshold_ratings.groupby('item').mean()
+        aggregated_ratings = aggregated_ratings.sort_values(by="predicted_rating", ascending=False).reset_index()[
+            ['item', 'predicted_rating']]
+        
+        selected_items = list(aggregated_ratings.head(recommendations_number)['item'])
+        
+        return selected_items
+    
+    def generate_group_recommendations_for_group(self, group_ratings, recommendations_number):
+        selected_items = self.avgnm_algorithm(group_ratings, recommendations_number, 2) # thresh set at 2
+        return {"AVGNM": selected_items}
