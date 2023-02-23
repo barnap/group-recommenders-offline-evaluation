@@ -40,7 +40,7 @@ def generate_group_recommendations_forall_groups(test_df, group_composition, rec
     for group_id in group_composition:
         
 #         print(datetime.now(), group_id)
-        print("It reached generate_group_recommendations_forall_groups")
+        print("It reached generate_group_recommendations_forall_groups, group "+str(group_id))
         
         # extract group info
         group = group_composition[group_id]

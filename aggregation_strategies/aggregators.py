@@ -272,9 +272,32 @@ class FAIAggregator(AggregationStrategy):
         return {"FAI": selected_items}
 
 class BordaCountAggregator(AggregationStrategy):
+    # borda count that is limited only to top-max_rel_items, if you are not in the top-max_rel_items, you get 0
+    def get_borda_rel(self, candidate_group_items_df):
+        from scipy.stats import rankdata
+        
+        rel_borda = rankdata(candidate_group_items_df["predicted_rating"].values, method='min')
+        
+        return (candidate_group_items_df.index, rel_borda)
+    
     # implements FAI aggregation algorithm
     def bdc_algorithm(self, group_ratings, recommendations_number):
-        selected_items = []
+        unique_users = group_ratings['user'].unique() # get all unique users in the group_ratings df
+        
+        localDF = group_ratings.copy()
+        localDF["borda_score"] = 0.0
+        
+        for uid in unique_users:
+            per_user_candidates = localDF.loc[localDF.user == uid]
+            borda_index, borda_score = self.get_borda_rel(per_user_candidates)
+            
+            localDF.loc[borda_index, "borda_score"] = borda_score
+        
+        aggregated_ratings = localDF.groupby('item').sum()
+        aggregated_ratings = aggregated_ratings.sort_values(by="borda_score", ascending=False).reset_index()[
+            ['item', 'predicted_rating', 'borda_score']]
+        
+        selected_items = list(aggregated_ratings.head(recommendations_number)['item'])
         
         return selected_items
     
