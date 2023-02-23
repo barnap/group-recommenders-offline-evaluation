@@ -21,6 +21,8 @@ class AggregationStrategy(ABC):
             return EPFuzzDAAggregator()
         elif strategy == "FAI":
             return FAIAggregator()
+        elif strategy == "BDC":
+            return BordaCountAggregator()
         return None
 
     @abstractmethod
@@ -266,3 +268,14 @@ class FAIAggregator(AggregationStrategy):
     def generate_group_recommendations_for_group(self, group_ratings, recommendations_number):
         selected_items = self.fai_algorithm(group_ratings, recommendations_number)
         return {"FAI": selected_items}
+
+class BordaCountAggregator(AggregationStrategy):
+    # implements FAI aggregation algorithm
+    def bdc_algorithm(self, group_ratings, recommendations_number):
+        selected_items = []
+        
+        return selected_items
+    
+    def generate_group_recommendations_for_group(self, group_ratings, recommendations_number):
+        selected_items = self.bdc_algorithm(group_ratings, recommendations_number)
+        return {"BDC": selected_items}
