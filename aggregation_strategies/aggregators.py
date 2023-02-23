@@ -49,7 +49,6 @@ class LeastMiseryAggregator(AggregationStrategy):
 
 class BaselinesAggregator(AggregationStrategy):
     def generate_group_recommendations_for_group(self, group_ratings, recommendations_number):
-        print("It entered the baseline aggregation class")
         # aggregate using least misery strategy
         aggregated_df = group_ratings.groupby('item').agg({"predicted_rating": [np.sum, np.prod, np.min, np.max]})
         aggregated_df = aggregated_df["predicted_rating"].reset_index()
@@ -66,15 +65,11 @@ class BaselinesAggregator(AggregationStrategy):
         # most pleasure
         mpl_df = aggregated_df.sort_values(by="amax", ascending=False).reset_index()[['item', 'amax']]
         mpl_recommendation_list = list(mpl_df.head(recommendations_number)['item'])
-        # BordaCount
-        bdc_df = aggregated_df.sort_values(by="amax", ascending=False).reset_index()[['item', 'amax']]
-        bdc_recommendation_list = list(bdc_df.head(recommendations_number)['item'])
         return {
             "ADD": add_recommendation_list,
             "MUL": mul_recommendation_list,
             "LMS": lms_recommendation_list,
             "MPL": mpl_recommendation_list,
-            "BDC": bdc_recommendation_list
         }
 
 
@@ -248,21 +243,26 @@ class EPFuzzDAAggregator(AggregationStrategy):
         return {"EPFuzzDA": selected_items}
     
 class FAIAggregator(AggregationStrategy):
-    print("It entered the FAI aggregation class")
     # implements FAI aggregation algorithm
     def fai_algorithm(self, group_ratings, recommendations_number):
-        print("It entered the FAI aggregation function")
-        selected_items = []
+        selected_items = []        
+        unique_users = group_ratings['user'].unique() # get all unique users in the group_ratings df
         
-        ## Finish FAI algorithm here later
-        aggregated_df = group_ratings.groupby('item').sum()
-        aggregated_df = aggregated_df.sort_values(by="predicted_rating", ascending=False).reset_index()[
-            ['item', 'predicted_rating']]
-        selected_items = list(aggregated_df.head(recommendations_number)['item'])
+        for i in range(int(recommendations_number)):
+            user_index = i % len(unique_users) # loop the number tracking the iterations (0, 1, ... len(unique_users), 0, 1, ...), so it doesnt try to access a user outside of the list of unique_users
+            
+            # print("user "+str(unique_users[user_index])+", looping index "+str(user_index)+" | linear index "+str(i))
+            
+            curr_user_ratings = group_ratings.loc[group_ratings['user'] == unique_users[user_index]] # only the ratings of current selected user index
+            curr_user_ratings = curr_user_ratings.sort_values(by="predicted_rating", ascending=False) # order the ratings so higher are on top
+            curr_user_ratings = curr_user_ratings.loc[~curr_user_ratings['item'].isin(selected_items)] # remove all rows with item already on selected_items
+            selected_item = curr_user_ratings['item'].iloc[0] # pick top row, with highest rating for current selected user index
+            
+            selected_items.append(selected_item) # append to final list
         
+        print(selected_items)
         return selected_items
     
     def generate_group_recommendations_for_group(self, group_ratings, recommendations_number):
-        print("It entered the FAI aggregation pre function")
         selected_items = self.fai_algorithm(group_ratings, recommendations_number)
         return {"FAI": selected_items}
