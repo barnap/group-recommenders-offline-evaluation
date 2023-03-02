@@ -134,8 +134,8 @@ class GFARAggregator(AggregationStrategy):
             borda_index, borda_score = self.get_borda_rel(per_user_candidates, relevant_max_items)
             localDF.loc[borda_index, "borda_score"] = borda_score
 
-            total_relevance_for_users = localDF.loc[borda_index, "borda_score"].sum()
-            localDF.loc[borda_index, "p_relevant"] = localDF.loc[borda_index, "borda_score"] / total_relevance_for_users
+            total_relevance_for_user = localDF.loc[borda_index, "borda_score"].sum()
+            localDF.loc[borda_index, "p_relevant"] = localDF.loc[borda_index, "borda_score"] / total_relevance_for_user
 
         selected_items = []
 
