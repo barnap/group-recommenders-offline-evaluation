@@ -38,3 +38,5 @@ feedback_polarity_debiasing = -3.0 #polarity debiasing parameter c from https://
 metrics = ["NDCG","BINARY"]  # list of implemented metrics to evaluate)
 
 borda_threshold = []
+
+top_k = 50
