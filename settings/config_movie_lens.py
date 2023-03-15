@@ -39,4 +39,4 @@ metrics = ["NDCG","BINARY"]  # list of implemented metrics to evaluate)
 
 borda_threshold = []
 
-top_k = [1, 21, 202, 505, 1010, 1515, 2020] # empty list will use all items, currently [1, 1%, 10%, 25%, 50%, 75%, 100%]
+top_k = [1, 5, 10, 21, 202, 505, 1010, 1515, 2020] # empty list will use all items, currently [1, 5, 10, 1%, 10%, 25%, 50%, 75%, 100%]
