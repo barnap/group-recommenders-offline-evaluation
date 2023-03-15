@@ -315,5 +315,5 @@ class AVGNoMiseryAggregator(AggregationStrategy):
         return selected_items
     
     def generate_group_recommendations_for_group(self, group_ratings, recommendations_number):
-        selected_items = self.avgnm_algorithm(group_ratings, recommendations_number, 2) # thresh set at 2
+        selected_items = self.avgnm_algorithm(group_ratings, recommendations_number, 1) # thresh set at 2
         return {"AVGNM": selected_items}
