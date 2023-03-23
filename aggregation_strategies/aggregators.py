@@ -304,6 +304,9 @@ class BordaCountAggregator(AggregationStrategy):
 class AVGNoMiseryAggregator(AggregationStrategy):
     # implements AVGNoMisery aggregation algorithm
     def avgnm_algorithm(self, group_ratings, recommendations_number, threshold=0):
+        # should groupby items, .min() must be above threshold, this gives list of allowed items (can be empty)
+        # then later check if item id is in this allowed list
+        
         threshold_ratings = group_ratings.loc[group_ratings['predicted_rating'] > threshold] # only the ratings above threshold
         
         aggregated_ratings = threshold_ratings.groupby('item').mean()
