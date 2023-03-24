@@ -307,15 +307,22 @@ class AVGNoMiseryAggregator(AggregationStrategy):
         # should groupby items, .min() must be above threshold, this gives list of allowed items (can be empty)
         # then later check if item id is in this allowed list
         
-        threshold_ratings = group_ratings.loc[group_ratings['predicted_rating'] > threshold] # only the ratings above threshold
+        allowed_items = group_ratings.groupby('item', as_index=False).min() # Collect the worst ratings of items among all users
+        allowed_items = allowed_items.loc[allowed_items['predicted_rating'] > threshold] # The worst rating within any user group (misery) must be above the threshold, else it's not allowed
+        allowed_items = allowed_items['item'].tolist() # As a list to use by the filter later
         
-        aggregated_ratings = threshold_ratings.groupby('item').mean()
-        aggregated_ratings = aggregated_ratings.sort_values(by="predicted_rating", ascending=False).reset_index()[
+        if len(allowed_items) == 0: # If there is no item allowed, just send back no list
+            return []
+        
+        ordered_ratings = group_ratings.groupby('item').mean() # Get the list of items ordered by average (this is 'average no misery', so if it's within allowed_items, the best average wins)
+        ordered_ratings = ordered_ratings.sort_values(by="predicted_rating", ascending=False).reset_index()[
             ['item', 'predicted_rating']]
         
-        selected_items = list(aggregated_ratings.head(recommendations_number)['item'])
+        collected_items = ordered_ratings[ordered_ratings['item'].isin(allowed_items)] # Only collect those within the list of allowed items
         
-        return selected_items
+        final_items = list(collected_items.head(recommendations_number)['item'])
+        
+        return final_items
     
     def generate_group_recommendations_for_group(self, group_ratings, recommendations_number):
         selected_items = self.avgnm_algorithm(group_ratings, recommendations_number, 1) # thresh set at 2
