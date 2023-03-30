@@ -19,8 +19,8 @@ evaluation_ground_truth = "USER_RATINGS" # "GROUP_CHOICES" # "USER_RATINGS"  # "
 group_sizes_to_test = [2,4,8]
 group_similarity_to_test = ["RANDOM", "SIMILAR", "DIVERGENT", "SIMILAR_ONE_DIVERGENT"] #["RANDOM", "SIMILAR", "DIVERGENT", "SIMILAR_ONE_DIVERGENT"]
 individual_rs_strategy = "LENSKIT_CF_ITEM"  # the used strategy for individual RS, I am keeping it generic to allow comparing more Individual Rec Sys if implemented, in a single run)
-aggregation_strategies = ["BASE", "GFAR", "EPFuzzDA", "FAI", "BDC", "AVGNM"]  # ["BASE", "GFAR", "EPFuzzDA"] list of implemented aggregation strategies we want to test
-recommendations_number = 10  # number of recommended items
+aggregation_strategies = ["BASE", "GFAR", "EPFuzzDA"]  # ["BASE", "GFAR", "EPFuzzDA"] list of implemented aggregation strategies we want to test
+recommendations_number = 20  # number of recommended items
 # recommendations_ordered = "ranking"  # sequence or ranking
 individual_rs_validation_folds_k = 0  # used for the k-fold validation)
 group_rs_evaluation_folds_k = 5 # 5
@@ -36,7 +36,3 @@ binarize_feedback_positive_threshold = 4.0 # if the feedback should be binarize,
 feedback_polarity_debiasing = -3.0 #polarity debiasing parameter c from https://dl.acm.org/doi/10.1145/3511047.3537650 usage: rating = max(0, rating+c)
 
 metrics = ["NDCG","BINARY"]  # list of implemented metrics to evaluate)
-
-borda_threshold = []
-
-top_k = [1, 5, 10, 21, 202, 505, 1010, 1515, 2020] # empty list will use all items, currently [1, 5, 10, 1%, 10%, 25%, 50%, 75%, 100%]
