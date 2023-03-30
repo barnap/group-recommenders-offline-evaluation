@@ -1,8 +1,10 @@
+from datetime import datetime
 import numpy as np
 import pandas as pd
-import settings.config as cfg
+import settings.config_movie_lens as cfg
 from aggregation_strategies.aggregators import AggregationStrategy
 from evaluation_metrics.metric_evaluators import MetricEvaluator
+from tqdm import tqdm
 
 #pre-processing for inverse propensity weighting, 
 #for more details visit https://dl.acm.org/doi/abs/10.1145/3240323.3240355
@@ -37,9 +39,7 @@ def calculate_inverse_propensity_score_user_normalization(propensity_per_item, t
 # Run all group RS strategies for all defined groups       
 def generate_group_recommendations_forall_groups(test_df, group_composition, recommendations_number):
     group_recommendations = dict()
-    for group_id in group_composition:
-        
-#         print(datetime.now(), group_id)
+    for group_id in tqdm(group_composition):
         
         # extract group info
         group = group_composition[group_id]
@@ -115,7 +115,7 @@ def evaluate_group_recommendations_forall_groups(
     evaluation_strategy = cfg.evaluation_strategy
     metrics = cfg.metrics
     group_evaluations = list()
-    for group_id in group_composition:
+    for group_id in tqdm(group_composition):
         
         #print(datetime.now(), group_id)
         

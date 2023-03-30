@@ -3,6 +3,8 @@ import pandas as pd
 
 from abc import ABC, abstractmethod
 
+import settings.config_movie_lens as cfg
+
 class AggregationStrategy(ABC):
 
     @staticmethod
@@ -17,6 +19,12 @@ class AggregationStrategy(ABC):
             return GFARAggregator()
         elif strategy == "EPFuzzDA":
             return EPFuzzDAAggregator()
+        elif strategy == "FAI":
+            return FAIAggregator()
+        elif strategy == "BDC":
+            return BordaCountAggregator()
+        elif strategy == "AVGNM":
+            return AVGNoMiseryAggregator()
         return None
 
     @abstractmethod
@@ -65,7 +73,7 @@ class BaselinesAggregator(AggregationStrategy):
             "ADD": add_recommendation_list,
             "MUL": mul_recommendation_list,
             "LMS": lms_recommendation_list,
-            "MPL": mpl_recommendation_list
+            "MPL": mpl_recommendation_list,
         }
 
 
@@ -126,8 +134,8 @@ class GFARAggregator(AggregationStrategy):
             borda_index, borda_score = self.get_borda_rel(per_user_candidates, relevant_max_items)
             localDF.loc[borda_index, "borda_score"] = borda_score
 
-            total_relevance_for_users = localDF.loc[borda_index, "borda_score"].sum()
-            localDF.loc[borda_index, "p_relevant"] = localDF.loc[borda_index, "borda_score"] / total_relevance_for_users
+            total_relevance_for_user = localDF.loc[borda_index, "borda_score"].sum()
+            localDF.loc[borda_index, "p_relevant"] = localDF.loc[borda_index, "borda_score"] / total_relevance_for_user
 
         selected_items = []
 
@@ -237,3 +245,85 @@ class EPFuzzDAAggregator(AggregationStrategy):
     def generate_group_recommendations_for_group(self, group_ratings, recommendations_number):
         selected_items = self.ep_fuzzdhondt_algorithm(group_ratings, recommendations_number)
         return {"EPFuzzDA": selected_items}
+    
+class FAIAggregator(AggregationStrategy):
+    # implements FAI aggregation algorithm
+    def fai_algorithm(self, group_ratings, recommendations_number):
+        selected_items = []        
+        unique_users = group_ratings['user'].unique() # get all unique users in the group_ratings df
+        
+        for i in range(int(recommendations_number)):
+            user_index = i % len(unique_users) # loop the number tracking the iterations (0, 1, ... len(unique_users), 0, 1, ...), so it doesnt try to access a user outside of the list of unique_users
+            
+            # print("user "+str(unique_users[user_index])+", looping index "+str(user_index)+" | linear index "+str(i))
+            
+            curr_user_ratings = group_ratings.loc[group_ratings['user'] == unique_users[user_index]] # only the ratings of current selected user index
+            curr_user_ratings = curr_user_ratings.sort_values(by="predicted_rating", ascending=False).reset_index() # order the ratings so higher are on top
+            curr_user_ratings = curr_user_ratings.loc[~curr_user_ratings['item'].isin(selected_items)] # remove all rows with item already on selected_items
+            
+            selected_item = curr_user_ratings['item'].iloc[0] # pick top row, with highest rating for current selected user index
+            
+            selected_items.append(selected_item) # append to final list
+        
+        return selected_items
+    
+    def generate_group_recommendations_for_group(self, group_ratings, recommendations_number):
+        selected_items = self.fai_algorithm(group_ratings, recommendations_number)
+        return {"FAI": selected_items}
+
+class BordaCountAggregator(AggregationStrategy):
+    # implements borda count aggregation algorithm
+    def bdc_algorithm(self, group_ratings, recommendations_number):
+        from scipy.stats import rankdata
+        
+        unique_users = group_ratings['user'].unique() # get all unique users in the group_ratings df
+        
+        localDF = group_ratings.copy()
+        localDF["borda_score"] = 0.0
+        
+        for uid in unique_users:
+            per_user_candidates = localDF.loc[localDF.user == uid]
+            
+            borda_score = rankdata(per_user_candidates["predicted_rating"].values, method='min')
+            borda_index = per_user_candidates.index
+            
+            localDF.loc[borda_index, "borda_score"] = borda_score
+        
+        aggregated_ratings = localDF.groupby('item').sum()
+        aggregated_ratings = aggregated_ratings.sort_values(by="borda_score", ascending=False).reset_index()[
+            ['item', 'predicted_rating', 'borda_score']]
+        
+        selected_items = list(aggregated_ratings.head(recommendations_number)['item'])
+        
+        return selected_items
+    
+    def generate_group_recommendations_for_group(self, group_ratings, recommendations_number):
+        selected_items = self.bdc_algorithm(group_ratings, recommendations_number)
+        return {"BDC": selected_items}
+    
+class AVGNoMiseryAggregator(AggregationStrategy):
+    # implements AVGNoMisery aggregation algorithm
+    def avgnm_algorithm(self, group_ratings, recommendations_number, threshold=0):
+        # should groupby items, .min() must be above threshold, this gives list of allowed items (can be empty)
+        # then later check if item id is in this allowed list
+        
+        allowed_items = group_ratings.groupby('item', as_index=False).min() # Collect the worst ratings of items among all users
+        allowed_items = allowed_items.loc[allowed_items['predicted_rating'] > threshold] # The worst rating within any user group (misery) must be above the threshold, else it's not allowed
+        allowed_items = allowed_items['item'].tolist() # As a list to use by the filter later
+        
+        if len(allowed_items) == 0: # If there is no item allowed, just send back no list
+            return []
+        
+        ordered_ratings = group_ratings.groupby('item').mean() # Get the list of items ordered by average (this is 'average no misery', so if it's within allowed_items, the best average wins)
+        ordered_ratings = ordered_ratings.sort_values(by="predicted_rating", ascending=False).reset_index()[
+            ['item', 'predicted_rating']]
+        
+        collected_items = ordered_ratings[ordered_ratings['item'].isin(allowed_items)] # Only collect those within the list of allowed items
+        
+        final_items = list(collected_items.head(recommendations_number)['item'])
+        
+        return final_items
+    
+    def generate_group_recommendations_for_group(self, group_ratings, recommendations_number):
+        selected_items = self.avgnm_algorithm(group_ratings, recommendations_number, 1) # thresh set at 2
+        return {"AVGNM": selected_items}
