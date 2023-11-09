@@ -2,7 +2,7 @@
 
 The datset contains the following files:
 
-- ratings: contains idnividual user preferences in the form:
+- ratings: contains individual user preferences in the form:
   - user, item, rating, rank 
   - ratings / ranks are in 1 to 10 range (the best rating is 10, the best rank clearly is 1)
   - both ratings and ranks are provided as in some data instances the rankings of options were collected, and in some ratings of options
